@@ -54,7 +54,7 @@
  '(magit-diff-use-overlays nil)
  '(package-selected-packages
    (quote
-    (quack material-theme spacemacs-theme dracula-theme afternoon-theme ample-theme monokai-theme gruvbox-theme vscode-dark-plus-theme ## ediprolog)))
+    (elcord quack material-theme spacemacs-theme dracula-theme afternoon-theme ample-theme monokai-theme gruvbox-theme vscode-dark-plus-theme ## ediprolog)))
  '(pdf-view-midnight-colors (quote ("#b2b2b2" . "#292b2e")))
  '(pos-tip-background-color "#FFFACE")
  '(pos-tip-foreground-color "#272822")
@@ -147,8 +147,10 @@
 (add-to-list 'el-get-recipe-path "~/.emacs.d/el-get-user/recipes")
 (el-get 'sync)
 
-;; Highlight entier expression
-;; (setq show-paren-style 'expression)
+;; Highlight entier expression ONLY in scheme mode
+(add-hook 'scheme-mode-hook
+	  (lambda ()
+	    (setq show-paren-style 'expression)))
 
 ;; Hide welcome screen
 (setq inhibit-startup-screen t)
@@ -158,3 +160,7 @@
 
 ;; Auto-complete mode
 (global-auto-complete-mode t)
+
+;; Discord rich presence: Elcord
+;; (require 'elcord)
+;; (elcord-mode)
