@@ -67,6 +67,7 @@
 ;;(add-to-list 'default-frame-alist '(width . 100))  ; Width in characters
 ;;(add-to-list 'default-frame-alist '(height . 50)) ; Height in lines
 
+(global-set-key (kbd "C-x C-b") 'ibuffer)
 
 ;; Helm
 ;;(require 'helm-config)
@@ -76,7 +77,7 @@
 (global-set-key (kbd "C-x C-f") 'helm-find-files)
 (global-set-key (kbd "M-y") 'helm-show-kill-ring)
 (global-set-key (kbd "C-x b") 'helm-mini)
-(global-set-key (kbd "C-x C-b") 'helm-buffers-list)
+;; (global-set-key (kbd "C-x C-b") 'helm-buffers-list)
 (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to run persistent action
 (global-set-key (kbd "C-c f") 'helm-recentf)
 
@@ -164,5 +165,5 @@
 (global-set-key (kbd "C-c c") #'jinja-render-template)
 
 ;; To edit prompts in the browser from emacs
-;; (load "/home/lilian/.emacs.d/inbrower.el")
+;; (load "/home/lilian/.emacs.d/inbrowser.el")
 
