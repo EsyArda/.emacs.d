@@ -13,10 +13,13 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("c6df274f1c530ccb44dd79f75a94924e7fdb2b0f967d1cc7b4095ff166e58f86" default))
+   '("adbcf269aaae0e40c9d30c244f8a7dc64d4ae719a2ff9e6c46931212cb3d4ee0" "8d57d367a8734401960a7d694741a8e4bb79d04f5b410b04fbdad63b88229311" "c6df274f1c530ccb44dd79f75a94924e7fdb2b0f967d1cc7b4095ff166e58f86" default))
  '(markdown-command "/usr/bin/pandoc")
  '(package-selected-packages
-   '(atomic-chrome dockerfile-mode flycheck-languagetool flycheck magit srcery-theme helm-tramp realgud helm-ls-git company gitlab-ci-mode jinja2-mode json-mode salt-mode helm wfnames markdown-mode async)))
+   '(haproxy-mode which-key php-mode magit docker-compose-mode transpose-frame crontab-mode auto-dark atomic-chrome dockerfile-mode flycheck srcery-theme helm-tramp realgud helm-ls-git company gitlab-ci-mode jinja2-mode json-mode salt-mode helm wfnames markdown-mode async))
+ '(pydoc-command "python3 -m pydoc")
+ '(pydoc-python-command "python3")
+ '(yaml-indent-offset 2))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -25,7 +28,28 @@
  )
 
 ;; Theme
-(load-theme 'srcery t)
+;; (load-theme 'srcery t)
+
+
+;; Auto dark mode system theme
+(require 'auto-dark)
+(auto-dark-mode t)
+(use-package auto-dark
+  :ensure t
+  :custom
+  (auto-dark-themes '((srcery) ()))
+  ;; (auto-dark-detection-method nil) ;; dangerous to be set manually
+  :hook
+  (auto-dark-dark-mode
+   . (lambda ()
+       ;; something to execute when dark mode is detected
+       ))
+  (auto-dark-light-mode
+   . (lambda ()
+       ;; something to execute when light mode is detected
+       (disable-theme 'srcery)
+       ))
+  :init (auto-dark-mode))
 
 (setq inhibit-startup-screen t ; Désactive l’écran de démarrage
       initial-scratch-message nil ; Désactive le message de brouillon
@@ -38,7 +62,19 @@
       org-startup-truncated nil ; Réactive le retour à la ligne en org-mode
       mouse-wheel-scroll-amount '(1 ((shift) . 1)) ; scroll one line at a time
       scroll-step 1 ; keyboard scroll one line at a time
+      mouse-yank-at-point t ; yank at cursor position
       )
+
+;; Calendrier en français
+;; https://www.emacswiki.org/emacs/CalendarLocalization
+(setq calendar-week-start-day 1
+      calendar-day-name-array ["Dimanche" "Lundi" "Mardi" "Mercredi"
+                               "Jeudi" "Vendredi" "Samedi"]
+      calendar-month-name-array ["Janvier" "Février" "Mars" "Avril" "Mai"
+                                 "Juin" "Juillet" "Août" "Septembre"
+                                 "Octobre" "Novembre" "Décembre"])
+;; (require 'french-holidays)
+;; (setq calendar-holidays holiday-french-holidays)
 
 ;; Fichiers de sauvegarde dans un dossier à part
 (setq backup-directory-alist `(("." . "~/.saves")))
@@ -56,6 +92,8 @@
       (list (format "%s %%S: %%j " (system-name))
             '(buffer-file-name "%f" (dired-directory dired-directory "%b"))))
 
+;; Buffer history length
+(setq history-length 10000)
 
 ;; Use Python in org-mode
 (org-babel-do-load-languages
@@ -68,10 +106,20 @@
 ;;(add-to-list 'default-frame-alist '(height . 50)) ; Height in lines
 
 (global-set-key (kbd "C-x C-b") 'ibuffer)
+(global-set-key (kbd "C-x à") 'delete-other-windows)
+(global-set-key (kbd "C-x é") 'split-window-below)
+(global-set-key (kbd "C-x è") 'split-window-right)
+(global-set-key (kbd "C-x »") 'delete-window)
+(global-set-key (quote [M-down]) (quote scroll-up-line))
+(global-set-key (quote [M-up]) (quote scroll-down-line))
+
+(global-hl-line-mode t)
 
 ;; Helm
 ;;(require 'helm-config)
 (helm-mode 1)
+;; Helm history length
+(setq helm-ff-history-max-length 10000)
 ;; Raccourcis pour utiliser les équivalents helm
 (global-set-key (kbd "M-x") 'helm-M-x)
 (global-set-key (kbd "C-x C-f") 'helm-find-files)
@@ -80,6 +128,7 @@
 ;; (global-set-key (kbd "C-x C-b") 'helm-buffers-list)
 (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to run persistent action
 (global-set-key (kbd "C-c f") 'helm-recentf)
+(global-set-key (kbd "M-s o") 'helm-occur)
 
 
 ;; Syntax highlighting for systemd files and OpenVPN files
@@ -98,6 +147,8 @@
 
 (add-to-list 'auto-mode-alist '("\\.prf\\'" . conf-mode))
 
+;; Which key
+(which-key-mode)
 
 ;; Company
 (global-company-mode)
@@ -107,14 +158,15 @@
 
 ;; Flycheck
 ;; https://www.flycheck.org/en/latest/
-;; (global-flycheck-mode)
-(add-hook 'after-init-hook #'global-flycheck-mode)
-(use-package flycheck-languagetool
-  :ensure t
-  :hook (text-mode . flycheck-languagetool-setup)
-  :init
-  (setq flycheck-languagetool-server-jar "/opt/LanguageTool-6.6/languagetool-server.jar"
-	flycheck-languagetool-language "fr-FR"))
+;; (add-hook 'after-init-hook #'global-flycheck-mode)
+;; (use-package flycheck-languagetool
+;;   :ensure t
+;;   :hook (text-mode . flycheck-languagetool-setup)
+;;   :init
+;;   (setq flycheck-languagetool-server-jar "/opt/LanguageTool-6.6/languagetool-server.jar"
+;; 	flycheck-languagetool-language "fr-FR"))
+(setq flycheck-salt-lint-executable "/home/lilian/saltmaster/venv-salt/bin/python")
+(global-flycheck-mode)
 
 ;; LangTool path
 ;;(setq langtool-language-tool-jar "/opt/LanguageTool-6.6/languagetool-commandline.jar")
@@ -126,10 +178,10 @@
 ;;       languagetool-server-command "/opt/LanguageTool-6.6/languagetool-server.jar")
 
 
+(setq yaml-indent-offset 4) ;; Default salt indentation to N spaces
+(setq salt-mode-indent-level 4)
+(setq salt-mode-python-program "python3")
 
-;; Default salt indentation to N spaces
-(setq yaml-indent-offset 2)
-(setq salt-mode-indent-level 2)
 
 ;; Function to turn on ANSI colors
 ;; (require 'ansi-color)
@@ -137,33 +189,45 @@
 ;;   (interactive)
 ;;   (ansi-color-apply-on-region (point-min) (point-max)))
 
-
-;; Render Jinja template function
-;; Run and open in a buffer 'python3 /home/lilian/trans-saltmaster-yuyu/render_template.py file_path_current_buffer'
-(defun jinja-render-template ()
-  "Run render_template.py on the current buffer file and open the rendered output."
+(defun jinja-render-template (&optional pillar_files)
+  "Render the current Jinja template using render_template.py."
   (interactive)
-  (let* ((input-file (buffer-file-name)))
+  (let ((input-file (buffer-file-name)))
     (if input-file
         (let* ((input-filename (file-name-nondirectory input-file))
                (input-dir (file-name-directory input-file))
                (output-filename (concat ".rendered_" input-filename))
                (output-file (expand-file-name output-filename input-dir))
-               (command (format "python3 /home/lilian/trans-saltmaster-yuyu/render_template.py %s"
-                                (shell-quote-argument input-file))))
-          ;; Run the shell command and check for errors
-          (if (= (call-process-shell-command command) 0)
+               (error-buffer (get-buffer-create "*jinja-render-error*"))
+               ;; Redirect stderr to stdout (2>&1)
+               (command (format "python3 /home/lilian/git/outils/render_template.py -o %s %s %s 2>&1"
+                                output-file (shell-quote-argument input-file) pillar_files))
+               (orig-line (line-number-at-pos))
+               (orig-col (current-column)))  ;; Save current line and column
+          (with-current-buffer error-buffer
+            (erase-buffer))  ;; Clear previous content
+          (if (eq (call-process-shell-command command nil error-buffer) 0)
               (if (file-exists-p output-file)
-                  (find-file output-file)
-                (message "Rendered file not found: %s" output-file))
-            (message "Render script failed: %s" command)))
+                  (progn
+                    (find-file output-file)
+                    ;; Restore same line and column
+                    (goto-char (point-min))
+                    (forward-line (1- orig-line))
+                    (move-to-column orig-col))
+                (progn
+                  (with-current-buffer error-buffer
+                    (insert "\nRendered file not found: " output-file))
+                  (display-buffer error-buffer)))
+            ;; On error: just display the error buffer
+            (display-buffer error-buffer)))
       (message "Buffer is not visiting a file"))))
 
-(global-set-key (kbd "C-c c") #'jinja-render-template)
 
 ;; Render Jinja template keybind
-(global-set-key (kbd "C-c c") #'jinja-render-template)
+(global-set-key (kbd "C-c r") (lambda ()
+				(interactive)
+				(jinja-render-template "/home/lilian/saltmaster/srv-yuyu/pillar/all/ssl_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/monitoring_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/trans/shinken_trans.sls")))
 
-;; To edit prompts in the browser from emacs
+;; To edit inputs in the browser from emacs
 ;; (load "/home/lilian/.emacs.d/inbrowser.el")
 
