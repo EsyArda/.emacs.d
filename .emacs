@@ -16,7 +16,7 @@
    '("adbcf269aaae0e40c9d30c244f8a7dc64d4ae719a2ff9e6c46931212cb3d4ee0" "8d57d367a8734401960a7d694741a8e4bb79d04f5b410b04fbdad63b88229311" "c6df274f1c530ccb44dd79f75a94924e7fdb2b0f967d1cc7b4095ff166e58f86" default))
  '(markdown-command "/usr/bin/pandoc")
  '(package-selected-packages
-   '(haproxy-mode which-key php-mode magit docker-compose-mode transpose-frame crontab-mode auto-dark atomic-chrome dockerfile-mode flycheck srcery-theme helm-tramp realgud helm-ls-git company gitlab-ci-mode jinja2-mode json-mode salt-mode helm wfnames markdown-mode async))
+   '(undo-fu haproxy-mode which-key php-mode magit docker-compose-mode transpose-frame crontab-mode auto-dark atomic-chrome dockerfile-mode flycheck srcery-theme helm-tramp realgud helm-ls-git company gitlab-ci-mode jinja2-mode json-mode salt-mode helm wfnames markdown-mode async))
  '(pydoc-command "python3 -m pydoc")
  '(pydoc-python-command "python3")
  '(yaml-indent-offset 2))
@@ -27,10 +27,10 @@
  ;; If there is more than one, they won't work right.
  )
 
+;;;;;;;;;;;;;;;;;;;;
 ;; Theme
+;;;;;;;;;;;;;;;;;;;;
 ;; (load-theme 'srcery t)
-
-
 ;; Auto dark mode system theme
 (require 'auto-dark)
 (auto-dark-mode t)
@@ -51,6 +51,9 @@
        ))
   :init (auto-dark-mode))
 
+;;;;;;;;;;;;;;;;;;;;
+;; Custom variables
+;;;;;;;;;;;;;;;;;;;;
 (setq inhibit-startup-screen t ; Désactive l’écran de démarrage
       initial-scratch-message nil ; Désactive le message de brouillon
       use-short-answers t ; y au lieu de yes
@@ -63,8 +66,45 @@
       mouse-wheel-scroll-amount '(1 ((shift) . 1)) ; scroll one line at a time
       scroll-step 1 ; keyboard scroll one line at a time
       mouse-yank-at-point t ; yank at cursor position
+      vc-follow-symlinks t ;; if visiting a symlink, version control follows it and visits the real file
+      backup-directory-alist `(("." . "~/.saves")) ;; Fichiers de sauvegarde dans un dossier à part
+      backup-by-copying t ;; Sauvegardes par copie
+      delete-old-versions t
+      kept-new-versions 6
+      kept-old-versions 2
+      version-control t
+      tramp-allow-unsafe-temporary-files t ;; Accept autosave file on local temporary directory for root owned files over SSH
       )
 
+;; (setq yaml-indent-offset 4) ;; Default salt/yaml indentation to N spaces
+
+(tool-bar-mode -1) ; Désactive la avec les icônes d’outils
+;; (delete-selection-mode t) ; Supprime la sélection quand on tappe du texte
+(global-hl-line-mode t)
+
+;; Full path in the buffer name
+(setq frame-title-format
+      (list (format "%s %%S: %%j " (system-name))
+            '(buffer-file-name "%f" (dired-directory dired-directory "%b"))))
+
+;; Buffer history length
+(setq history-length 10000)
+;; Sauvegarde de l’historique toutes les 5 min
+(run-at-time (current-time) 300 'recentf-save-list)
+
+;; Use Python in org-mode
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((python . t)
+   (shell . t)))
+(setq org-babel-python-command "/usr/bin/python3")
+
+;;(add-to-list 'default-frame-alist '(width . 100))  ; Window width in characters
+;;(add-to-list 'default-frame-alist '(height . 50)) ; Window height in lines
+
+;;;;;;;;;;;;;;;;;;;;
+;; Calendar
+;;;;;;;;;;;;;;;;;;;;
 ;; Calendrier en français
 ;; https://www.emacswiki.org/emacs/CalendarLocalization
 (setq calendar-week-start-day 1
@@ -76,35 +116,9 @@
 ;; (require 'french-holidays)
 ;; (setq calendar-holidays holiday-french-holidays)
 
-;; Fichiers de sauvegarde dans un dossier à part
-(setq backup-directory-alist `(("." . "~/.saves")))
-(setq backup-by-copying t)
-(setq delete-old-versions t
-  kept-new-versions 6
-  kept-old-versions 2
-  version-control t)
-
-(tool-bar-mode -1) ; Désactive la avec les icônes d’outils
-;; (delete-selection-mode t) ; Supprime la sélection quand on tappe du texte
-
-;; Full path in the buffer name
-(setq frame-title-format
-      (list (format "%s %%S: %%j " (system-name))
-            '(buffer-file-name "%f" (dired-directory dired-directory "%b"))))
-
-;; Buffer history length
-(setq history-length 10000)
-
-;; Use Python in org-mode
-(org-babel-do-load-languages
- 'org-babel-load-languages
- '((python . t)
-   (shell . t)))
-(setq org-babel-python-command "/usr/bin/python3")
-
-;;(add-to-list 'default-frame-alist '(width . 100))  ; Width in characters
-;;(add-to-list 'default-frame-alist '(height . 50)) ; Height in lines
-
+;;;;;;;;;;;;;;;;;;;;
+;; Keyboard shortcuts
+;;;;;;;;;;;;;;;;;;;;
 (global-set-key (kbd "C-x C-b") 'ibuffer)
 (global-set-key (kbd "C-x à") 'delete-other-windows)
 (global-set-key (kbd "C-x é") 'split-window-below)
@@ -113,9 +127,27 @@
 (global-set-key (quote [M-down]) (quote scroll-up-line))
 (global-set-key (quote [M-up]) (quote scroll-down-line))
 
-(global-hl-line-mode t)
+;;;;;;;;;;;;;;;;;;;;
+;; Conf mode
+;;;;;;;;;;;;;;;;;;;;
+;; Syntax highlighting for systemd files and OpenVPN files
+(add-to-list 'auto-mode-alist '("\\.ovpn\\'" . conf-unix-mode))
+(add-to-list 'auto-mode-alist '("\\.service\\'" . conf-unix-mode))
+(add-to-list 'auto-mode-alist '("\\.timer\\'" . conf-unix-mode))
+(add-to-list 'auto-mode-alist '("\\.target\\'" . conf-unix-mode))
+(add-to-list 'auto-mode-alist '("\\.mount\\'" . conf-unix-mode))
+(add-to-list 'auto-mode-alist '("\\.automount\\'" . conf-unix-mode))
+(add-to-list 'auto-mode-alist '("\\.slice\\'" . conf-unix-mode))
+(add-to-list 'auto-mode-alist '("\\.socket\\'" . conf-unix-mode))
+(add-to-list 'auto-mode-alist '("\\.path\\'" . conf-unix-mode))
+(add-to-list 'auto-mode-alist '("\\.netdev\\'" . conf-unix-mode))
+(add-to-list 'auto-mode-alist '("\\.network\\'" . conf-unix-mode))
+(add-to-list 'auto-mode-alist '("\\.link\\'" . conf-unix-mode))
+(add-to-list 'auto-mode-alist '("\\.prf\\'" . conf-mode))
 
+;;;;;;;;;;;;;;;;;;;;
 ;; Helm
+;;;;;;;;;;;;;;;;;;;;
 ;;(require 'helm-config)
 (helm-mode 1)
 ;; Helm history length
@@ -130,22 +162,9 @@
 (global-set-key (kbd "C-c f") 'helm-recentf)
 (global-set-key (kbd "M-s o") 'helm-occur)
 
-
-;; Syntax highlighting for systemd files and OpenVPN files
-(add-to-list 'auto-mode-alist '("\\.ovpn\\'" . conf-unix-mode))
-(add-to-list 'auto-mode-alist '("\\.service\\'" . conf-unix-mode))
-(add-to-list 'auto-mode-alist '("\\.timer\\'" . conf-unix-mode))
-(add-to-list 'auto-mode-alist '("\\.target\\'" . conf-unix-mode))
-(add-to-list 'auto-mode-alist '("\\.mount\\'" . conf-unix-mode))
-(add-to-list 'auto-mode-alist '("\\.automount\\'" . conf-unix-mode))
-(add-to-list 'auto-mode-alist '("\\.slice\\'" . conf-unix-mode))
-(add-to-list 'auto-mode-alist '("\\.socket\\'" . conf-unix-mode))
-(add-to-list 'auto-mode-alist '("\\.path\\'" . conf-unix-mode))
-(add-to-list 'auto-mode-alist '("\\.netdev\\'" . conf-unix-mode))
-(add-to-list 'auto-mode-alist '("\\.network\\'" . conf-unix-mode))
-(add-to-list 'auto-mode-alist '("\\.link\\'" . conf-unix-mode))
-
-(add-to-list 'auto-mode-alist '("\\.prf\\'" . conf-mode))
+;;;;;;;;;;;;;;;;;;;;
+;; Packages
+;;;;;;;;;;;;;;;;;;;;
 
 ;; Which key
 (which-key-mode)
@@ -177,9 +196,8 @@
 ;;       languagetool-console-command "/opt/LanguageTool-6.6/languagetool-commandline.jar"
 ;;       languagetool-server-command "/opt/LanguageTool-6.6/languagetool-server.jar")
 
-
-(setq yaml-indent-offset 4) ;; Default salt indentation to N spaces
-(setq salt-mode-indent-level 4)
+;; salt-mode
+;; (setq salt-mode-indent-level 4)
 (setq salt-mode-python-program "python3")
 
 
@@ -189,10 +207,19 @@
 ;;   (interactive)
 ;;   (ansi-color-apply-on-region (point-min) (point-max)))
 
-(defun jinja-render-template (&optional pillar_files)
-  "Render the current Jinja template using render_template.py."
-  (interactive)
-  (let ((input-file (buffer-file-name)))
+;; Undo fu
+(global-unset-key (kbd "C-z"))
+(global-set-key (kbd "C-z")   'undo-fu-only-undo)
+(global-set-key (kbd "C-S-z") 'undo-fu-only-redo)
+
+;;;;;;;;;;;;;;;;;;;;
+;; Custom functions
+;;;;;;;;;;;;;;;;;;;;
+
+(defun jinja-render-to-file (grain-id &optional pillar-files)
+  "Renders the current Jinja file given a salt GRAIN-ID (and PILLAR-FILES)."
+  (interactive "sGrain ID: ")
+  (let ((input-file (buffer-file-name (window-buffer (minibuffer-selected-window)))))
     (if input-file
         (let* ((input-filename (file-name-nondirectory input-file))
                (input-dir (file-name-directory input-file))
@@ -200,8 +227,8 @@
                (output-file (expand-file-name output-filename input-dir))
                (error-buffer (get-buffer-create "*jinja-render-error*"))
                ;; Redirect stderr to stdout (2>&1)
-               (command (format "python3 /home/lilian/git/outils/render_template.py -o %s %s %s 2>&1"
-                                output-file (shell-quote-argument input-file) pillar_files))
+               (command (format "python3 /home/lilian/git/outils/render_template.py -g %s -o %s %s %s 2>&1"
+                                grain-id output-file (shell-quote-argument input-file) pillar-files))
                (orig-line (line-number-at-pos))
                (orig-col (current-column)))  ;; Save current line and column
           (with-current-buffer error-buffer
@@ -213,7 +240,8 @@
                     ;; Restore same line and column
                     (goto-char (point-min))
                     (forward-line (1- orig-line))
-                    (move-to-column orig-col))
+                    (move-to-column orig-col)
+		    )
                 (progn
                   (with-current-buffer error-buffer
                     (insert "\nRendered file not found: " output-file))
@@ -222,12 +250,43 @@
             (display-buffer error-buffer)))
       (message "Buffer is not visiting a file"))))
 
+(defun jinja-render-to-buffer (grain-id &optional pillar-files)
+  "Renders the current Jinja file for the salt GRAIN-ID and optional PILLAR-FILES to a new buffer."
+  (interactive "sGrain ID: ")
+  (let ((input-file (buffer-file-name)))
+    (if (not input-file)
+	(message "Couldn't get this buffer's file.")
+      (let* ((error-buffer (get-buffer-create "*jinja-render-error*"))
+	     (output-buffer (get-buffer-create (format "*jinja-rendered %s*" input-file)))
+	     (args (delq nil
+			 (list "/home/lilian/git/outils/render_template.py" "-g" grain-id (shell-quote-argument (buffer-file-name)) pillar-files))))
+	(with-current-buffer error-buffer (erase-buffer))
+	(apply #'call-process "/usr/bin/python3" nil output-buffer nil args)
+	(with-current-buffer output-buffer
+	  (auto-revert-mode 1))
+	(let ((window (split-window-below)))
+	  (set-window-buffer window output-buffer)
+	  (select-window window)
+	  (message "Rendered jinja file"))))))
+
 
 ;; Render Jinja template keybind
-(global-set-key (kbd "C-c r") (lambda ()
-				(interactive)
-				(jinja-render-template "/home/lilian/saltmaster/srv-yuyu/pillar/all/ssl_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/monitoring_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/trans/shinken_trans.sls")))
+(global-set-key
+ (kbd "C-c r")
+ (lambda ()
+   (interactive)
+   (jinja-render-to-file "dev-lti-pomdorochi" "/home/lilian/saltmaster/srv-yuyu/pillar/all/ssl_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/monitoring_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/trans/shinken_trans.sls")))
+
+(global-set-key
+ (kbd "C-c d")
+ (lambda (grain-id)
+   (interactive "sGrain ID: ")
+   (let* ((commande (format "python3 /home/lilian/git/outils/render_template.py -g %s -o %s.rendered %s %s"
+			   grain-id
+			   (shell-quote-argument (buffer-file-name))
+			   (shell-quote-argument (buffer-file-name))
+			   "/home/lilian/saltmaster/srv-yuyu/pillar/all/ssl_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/monitoring_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/trans/shinken_trans.sls")))
+     (call-process-shell-command commande))))
 
 ;; To edit inputs in the browser from emacs
 ;; (load "/home/lilian/.emacs.d/inbrowser.el")
-
