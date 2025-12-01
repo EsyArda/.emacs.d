@@ -102,6 +102,13 @@
 ;;(add-to-list 'default-frame-alist '(width . 100))  ; Window width in characters
 ;;(add-to-list 'default-frame-alist '(height . 50)) ; Window height in lines
 
+(with-eval-after-load 'eglot
+  (message (file-name-directory buffer-file-name))
+  (setq eglot-server-programs
+        '((python-mode . ("/home/lilian/saltmaster/srv-yuyu/salt/venv-salt/bin/pylsp")))))
+
+
+
 ;;;;;;;;;;;;;;;;;;;;
 ;; Calendar
 ;;;;;;;;;;;;;;;;;;;;
@@ -215,7 +222,6 @@
 ;;;;;;;;;;;;;;;;;;;;
 ;; Custom functions
 ;;;;;;;;;;;;;;;;;;;;
-
 (defun jinja-render-to-file (grain-id &optional pillar-files)
   "Renders the current Jinja file given a salt GRAIN-ID (and PILLAR-FILES)."
   (interactive "sGrain ID: ")
@@ -225,23 +231,24 @@
                (input-dir (file-name-directory input-file))
                (output-filename (concat ".rendered_" input-filename))
                (output-file (expand-file-name output-filename input-dir))
+	       (context-file (concat input-dir "../init.sls"))
                (error-buffer (get-buffer-create "*jinja-render-error*"))
                ;; Redirect stderr to stdout (2>&1)
-               (command (format "python3 /home/lilian/git/outils/render_template.py -g %s -o %s %s %s 2>&1"
-                                grain-id output-file (shell-quote-argument input-file) pillar-files))
+               (command (format "python3 /home/lilian/git/outils/render_template.py -g %s -o %s -c %s %s %s 2>&1"
+                                grain-id output-file context-file (shell-quote-argument input-file) pillar-files))
                (orig-line (line-number-at-pos))
                (orig-col (current-column)))  ;; Save current line and column
           (with-current-buffer error-buffer
-            (erase-buffer))  ;; Clear previous content
+            (erase-buffer)) ;; Clear previous content
           (if (eq (call-process-shell-command command nil error-buffer) 0)
               (if (file-exists-p output-file)
                   (progn
                     (find-file output-file)
+		    (view-mode 1)
                     ;; Restore same line and column
                     (goto-char (point-min))
                     (forward-line (1- orig-line))
-                    (move-to-column orig-col)
-		    )
+                    (move-to-column orig-col))
                 (progn
                   (with-current-buffer error-buffer
                     (insert "\nRendered file not found: " output-file))
@@ -275,18 +282,24 @@
  (kbd "C-c r")
  (lambda ()
    (interactive)
-   (jinja-render-to-file "dev-lti-pomdorochi" "/home/lilian/saltmaster/srv-yuyu/pillar/all/ssl_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/monitoring_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/trans/shinken_trans.sls")))
+   (jinja-render-to-file "dev-lti-pomdorochi" "/home/lilian/saltmaster/srv-yuyu/pillar/all/ssl_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/dev/ojs_dev.sls")))
 
 (global-set-key
  (kbd "C-c d")
  (lambda (grain-id)
    (interactive "sGrain ID: ")
-   (let* ((commande (format "python3 /home/lilian/git/outils/render_template.py -g %s -o %s.rendered %s %s"
-			   grain-id
-			   (shell-quote-argument (buffer-file-name))
-			   (shell-quote-argument (buffer-file-name))
-			   "/home/lilian/saltmaster/srv-yuyu/pillar/all/ssl_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/monitoring_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/trans/shinken_trans.sls")))
+   (let* ((input-file (buffer-file-name (window-buffer (minibuffer-selected-window))))
+	  (output-file (expand-file-name (concat ".rendered_" (file-name-nondirectory input-file)) (file-name-directory input-file)))
+	  (commande (format "python3 /home/lilian/git/outils/render_template.py -g %s -o %s %s %s"
+			    grain-id
+			    (shell-quote-argument output-file)
+			    (shell-quote-argument input-file)
+			    "/home/lilian/saltmaster/srv-yuyu/pillar/all/ssl_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/dev/ojs_dev.sls")))
      (call-process-shell-command commande))))
 
 ;; To edit inputs in the browser from emacs
 ;; (load "/home/lilian/.emacs.d/inbrowser.el")
+
+;; Local Variables:
+;; flycheck-disabled-checkers: (emacs-lisp-checkdoc)
+;; End:
