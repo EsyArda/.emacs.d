@@ -14,18 +14,25 @@
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    '("adbcf269aaae0e40c9d30c244f8a7dc64d4ae719a2ff9e6c46931212cb3d4ee0" "8d57d367a8734401960a7d694741a8e4bb79d04f5b410b04fbdad63b88229311" "c6df274f1c530ccb44dd79f75a94924e7fdb2b0f967d1cc7b4095ff166e58f86" default))
+ '(doc-view-continuous t)
  '(markdown-command "/usr/bin/pandoc")
+ '(org-export-backends '(ascii html icalendar latex man md odt))
  '(package-selected-packages
-   '(undo-fu haproxy-mode which-key php-mode magit docker-compose-mode transpose-frame crontab-mode auto-dark atomic-chrome dockerfile-mode flycheck srcery-theme helm-tramp realgud helm-ls-git company gitlab-ci-mode jinja2-mode json-mode salt-mode helm wfnames markdown-mode async))
+   '(ligature company-lua lua-mode flycheck-grammalecte slack flycheck-languagetool undo-fu haproxy-mode which-key php-mode magit docker-compose-mode transpose-frame crontab-mode auto-dark atomic-chrome dockerfile-mode flycheck srcery-theme helm-tramp realgud helm-ls-git company gitlab-ci-mode jinja2-mode json-mode salt-mode helm wfnames markdown-mode async))
  '(pydoc-command "python3 -m pydoc")
  '(pydoc-python-command "python3")
- '(yaml-indent-offset 2))
+ '(realgud-window-split-orientation 'horizontal)
+ '(realgud:pdb-command-name "python3 -m pdb")
+ '(yaml-indent-offset 4 t))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
+;; Couleurs ansi
+;; C-x h M-: (ansi-color-apply-on-region (point-min) (point-max)) RET
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; Theme
@@ -52,6 +59,26 @@
   :init (auto-dark-mode))
 
 ;;;;;;;;;;;;;;;;;;;;
+;; Font
+;;;;;;;;;;;;;;;;;;;;
+(set-face-attribute 'default nil :height 110)
+(set-frame-font "Fira Code")
+;; Enable the www ligature in every possible major mode
+(ligature-set-ligatures 't '("www"))
+;; Enable ligatures in programming modes                                                           
+(ligature-set-ligatures 'prog-mode '("www" "**" "***" "**/" "*>" "*/" "\\\\" "\\\\\\" "{-" "::"
+                                     ":::" ":=" "!!" "!=" "!==" "-}" "----" "-->" "->" "->>"
+                                     "-<" "-<<" "-~" "#{" "#[" "##" "###" "####" "#(" "#?" "#_"
+                                     "#_(" ".-" ".=" ".." "..<" "..." "?=" "??" ";;" "/*" "/**"
+                                     "/=" "/==" "/>" "//" "///" "&&" "||" "||=" "|=" "|>" "^=" "$>"
+                                     "++" "+++" "+>" "=:=" "==" "===" "==>" "=>" "=>>" "<="
+                                     "=<<" "=/=" ">-" ">=" ">=>" ">>" ">>-" ">>=" ">>>" "<*"
+                                     "<*>" "<|" "<|>" "<$" "<$>" "<!--" "<-" "<--" "<->" "<+"
+                                     "<+>" "<=" "<==" "<=>" "<=<" "<>" "<<" "<<-" "<<=" "<<<"
+                                     "<~" "<~~" "</" "</>" "~@" "~-" "~>" "~~" "~~>" "%%"))
+(global-ligature-mode 't)
+
+;;;;;;;;;;;;;;;;;;;;
 ;; Custom variables
 ;;;;;;;;;;;;;;;;;;;;
 (setq inhibit-startup-screen t ; Désactive l’écran de démarrage
@@ -74,9 +101,8 @@
       kept-old-versions 2
       version-control t
       tramp-allow-unsafe-temporary-files t ;; Accept autosave file on local temporary directory for root owned files over SSH
+      indent-tabs-mode nil ;; Remplace les tabulations par des espaces
       )
-
-;; (setq yaml-indent-offset 4) ;; Default salt/yaml indentation to N spaces
 
 (tool-bar-mode -1) ; Désactive la avec les icônes d’outils
 ;; (delete-selection-mode t) ; Supprime la sélection quand on tappe du texte
@@ -90,23 +116,18 @@
 ;; Buffer history length
 (setq history-length 10000)
 ;; Sauvegarde de l’historique toutes les 5 min
-(run-at-time (current-time) 300 'recentf-save-list)
+;; (run-at-time (current-time) 300 'recentf-save-list)
 
-;; Use Python in org-mode
+;; Use Python and Sh in org-mode
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((python . t)
-   (shell . t)))
+   (shell . t)
+   (calc . t)))
 (setq org-babel-python-command "/usr/bin/python3")
 
 ;;(add-to-list 'default-frame-alist '(width . 100))  ; Window width in characters
 ;;(add-to-list 'default-frame-alist '(height . 50)) ; Window height in lines
-
-(with-eval-after-load 'eglot
-  (message (file-name-directory buffer-file-name))
-  (setq eglot-server-programs
-        '((python-mode . ("/home/lilian/saltmaster/srv-yuyu/salt/venv-salt/bin/pylsp")))))
-
 
 
 ;;;;;;;;;;;;;;;;;;;;
@@ -137,7 +158,7 @@
 ;;;;;;;;;;;;;;;;;;;;
 ;; Conf mode
 ;;;;;;;;;;;;;;;;;;;;
-;; Syntax highlighting for systemd files and OpenVPN files
+;; Syntax highlighting
 (add-to-list 'auto-mode-alist '("\\.ovpn\\'" . conf-unix-mode))
 (add-to-list 'auto-mode-alist '("\\.service\\'" . conf-unix-mode))
 (add-to-list 'auto-mode-alist '("\\.timer\\'" . conf-unix-mode))
@@ -151,6 +172,8 @@
 (add-to-list 'auto-mode-alist '("\\.network\\'" . conf-unix-mode))
 (add-to-list 'auto-mode-alist '("\\.link\\'" . conf-unix-mode))
 (add-to-list 'auto-mode-alist '("\\.prf\\'" . conf-mode))
+(add-to-list 'auto-mode-alist '("\\.cron\\'" . crontab-mode))
+(add-to-list 'auto-mode-alist '("\\.jsonl\\'" . jsonc-mode))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; Helm
@@ -161,7 +184,7 @@
 (setq helm-ff-history-max-length 10000)
 ;; Raccourcis pour utiliser les équivalents helm
 (global-set-key (kbd "M-x") 'helm-M-x)
-(global-set-key (kbd "C-x C-f") 'helm-find-files)
+;; (global-set-key (kbd "C-x C-f") 'helm-find-files)
 (global-set-key (kbd "M-y") 'helm-show-kill-ring)
 (global-set-key (kbd "C-x b") 'helm-mini)
 ;; (global-set-key (kbd "C-x C-b") 'helm-buffers-list)
@@ -181,27 +204,68 @@
 (add-hook 'after-init-hook 'company-tng-mode)
 (setq company-minimum-prefix-length 2)
 (setq company-idle-delay 0.1)
+;; https://emacs.stackexchange.com/questions/55028/how-can-i-disable-company-mode-in-a-shell-when-it-is-remote
+(defun my-shell-mode-setup-function () 
+  (when (and (fboundp 'company-mode)
+             (file-remote-p default-directory))
+    (company-mode -1)))
+(add-hook 'shell-mode-hook 'my-shell-mode-setup-function)
+(add-hook 'eshell-mode-hook 'my-shell-mode-setup-function)
+
+;; LSP Lua
+(with-eval-after-load 'eglot
+  (add-to-list 'eglot-server-programs
+               '(lua-mode . ("/home/perso/.local/opt/lua-language-server/bin/lua-language-server"))))
+(add-hook 'lua-mode-hook #'eglot-ensure)
+
+;; LSP Python
+(with-eval-after-load 'eglot
+  (message (file-name-directory buffer-file-name))
+  (setq eglot-server-programs
+        '((python-mode . ("pylsp")))))
+(add-hook 'python-mode-hook #'eglot-ensure)
+;; (with-eval-after-load 'eglot
+;;   (message (file-name-directory buffer-file-name))
+;;   (setq eglot-server-programs
+;;         '((python-mode . ("/home/lilian/saltmaster/srv-yuyu/salt/venv-salt/bin/pylsp")))))
+
+
 
 ;; Flycheck
 ;; https://www.flycheck.org/en/latest/
-;; (add-hook 'after-init-hook #'global-flycheck-mode)
+(add-hook 'after-init-hook #'global-flycheck-mode)
 ;; (use-package flycheck-languagetool
 ;;   :ensure t
 ;;   :hook (text-mode . flycheck-languagetool-setup)
 ;;   :init
 ;;   (setq flycheck-languagetool-server-jar "/opt/LanguageTool-6.6/languagetool-server.jar"
-;; 	flycheck-languagetool-language "fr-FR"))
-(setq flycheck-salt-lint-executable "/home/lilian/saltmaster/venv-salt/bin/python")
-(global-flycheck-mode)
+;;       flycheck-languagetool-language "fr-FR"
+;;       flycheck-salt-lint-executable "/home/lilian/saltmaster/venv-salt/bin/python3"))
 
-;; LangTool path
-;;(setq langtool-language-tool-jar "/opt/LanguageTool-6.6/languagetool-commandline.jar")
-;;(require 'langtool)
+;; ;; Grammalecte in Flycheck
+;; ;; https://www.heptagone.org/Outils-linguistiques-et-Emacs.html
+;; (use-package flycheck-grammalecte
+;;   :after flycheck
+;;   :demand t
+;;   :bind (("C-c D" . grammalecte-find-synonyms-at-point)
+;; 	 ("C-c G" . flycheck-grammalecte-correct-error-at-point))
+;;   :config
+;;   (setq flycheck-grammalecte-executable "~/saltmaster/venv-salt/bin/python3")
+;;   ;; (setq flycheck-grammalecte-report-grammar t)
+;;   ;; (setq flycheck-grammalecte-report-spellcheck nil)
+;;   ;; (setq flycheck-grammalecte-report-apos nil)
+;;   ;; (setq flycheck-grammalecte-report-nbsp nil)
+;;   ;; (setq flycheck-grammalecte-report-esp nil)
+;;   (setq flycheck-grammalecte-filters-by-mode
+;;         '((org-mode "(?ims)^[ \t]*#\\+begin_src.+#\\+end_src"
+;; 		    "(?im)^[ \t]*#\\+begin[_:].+$"
+;; 		    "(?im)^[ \t]*#\\+end[_:].+$"
+;; 		    "(?m)^[ \t]*(?:DEADLINE|SCHEDULED):.+$"
+;; 		    "(?m)^\\*+ .*[ \t]*(:[\\w:@]+:)[ \t]*$"
+;; 		    "(?im)^[ \t]*#\\+(?:caption|description|keywords|(?:sub)?title):"
+;; 		    "(?im)^[ \t]*#\\+(?!caption|description|keywords|(?:sub)?title)\\w+:.*$")))
+;;   (flycheck-grammalecte-setup))
 
-;; LanguageTool
-;; (setq languagetool-java-arguments '("-Dfile.encoding=UTF-8")
-;;       languagetool-console-command "/opt/LanguageTool-6.6/languagetool-commandline.jar"
-;;       languagetool-server-command "/opt/LanguageTool-6.6/languagetool-server.jar")
 
 ;; salt-mode
 ;; (setq salt-mode-indent-level 4)
@@ -218,6 +282,55 @@
 (global-unset-key (kbd "C-z"))
 (global-set-key (kbd "C-z")   'undo-fu-only-undo)
 (global-set-key (kbd "C-S-z") 'undo-fu-only-redo)
+
+;; emacs-slack
+;; Gérer les tokens pour plus de sécu
+;; (use-package slack
+;;   :bind (("C-c S K" . slack-stop)
+;;          ("C-c S c" . slack-select-rooms)
+;;          ("C-c S u" . slack-select-unread-rooms)
+;;          ("C-c S U" . slack-user-select)
+;;          ("C-c S s" . slack-search-from-messages)
+;;          ("C-c S J" . slack-jump-to-browser)
+;;          ("C-c S j" . slack-jump-to-app)
+;;          ("C-c S e" . slack-insert-emoji)
+;;          ("C-c S E" . slack-message-edit)
+;;          ("C-c S r" . slack-message-add-reaction)
+;;          ("C-c S t" . slack-thread-show-or-create)
+;;          ("C-c S g" . slack-message-redisplay)
+;;          ("C-c S G" . slack-conversations-list-update-quick)
+;;          ("C-c S q" . slack-quote-and-reply)
+;;          ("C-c S Q" . slack-quote-and-reply-with-link)
+;;          (:map slack-mode-map
+;;                (("@" . slack-message-embed-mention)
+;;                 ("#" . slack-message-embed-channel)))
+;;          (:map slack-thread-message-buffer-mode-map
+;;                (("C-c '" . slack-message-write-another-buffer)
+;;                 ("@" . slack-message-embed-mention)
+;;                 ("#" . slack-message-embed-channel)))
+;;          (:map slack-message-buffer-mode-map
+;;                (("C-c '" . slack-message-write-another-buffer)))
+;;          (:map slack-message-compose-buffer-mode-map
+;;                (("C-c '" . slack-message-send-from-buffer)))
+;;          )
+;;   ;; :custom
+;;   ;; (slack-extra-subscribed-channels (mapcar 'intern (list "some-channel")))
+;;   :config
+;;   (slack-register-team
+;;      :name "Compilatio"
+;;      :token "xoxc-XXXXXXXXXXX"
+;;      :cookie "xoxd-XXXXXXXXX; d-s=0000000000"
+;;      :full-and-display-names t
+;;      :default t
+;;      :subscribed-channels nil ;; using slack-extra-subscribed-channels because I can change it dynamically
+;;      )
+;;   (setq slack-prefer-current-team t))
+;; (use-package alert
+;;   :commands (alert)
+;;   :init
+;;   (setq alert-default-style 'notifier))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; Custom functions
@@ -276,13 +389,12 @@
 	  (select-window window)
 	  (message "Rendered jinja file"))))))
 
-
 ;; Render Jinja template keybind
 (global-set-key
  (kbd "C-c r")
- (lambda ()
-   (interactive)
-   (jinja-render-to-file "dev-lti-pomdorochi" "/home/lilian/saltmaster/srv-yuyu/pillar/all/ssl_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/dev/ojs_dev.sls")))
+ (lambda (grain-id)
+   (interactive "sGrain ID: ")
+   (jinja-render-to-file grain-id "/home/lilian/saltmaster/srv-yuyu/pillar/dev/ojs_dev.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/ssl_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/ssh_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/prod/shibboleth_prod.sls /home/lilian/saltmaster/srv-yuyu/pillar/trans/tolgee_trans.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/tolgee_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/monitoring_all.sls")))
 
 (global-set-key
  (kbd "C-c d")
@@ -296,6 +408,7 @@
 			    (shell-quote-argument input-file)
 			    "/home/lilian/saltmaster/srv-yuyu/pillar/all/ssl_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/dev/ojs_dev.sls")))
      (call-process-shell-command commande))))
+
 
 ;; To edit inputs in the browser from emacs
 ;; (load "/home/lilian/.emacs.d/inbrowser.el")
