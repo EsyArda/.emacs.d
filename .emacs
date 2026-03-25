@@ -353,7 +353,6 @@
   (ansi-color-apply-on-region (point-min) (point-max)))
 
 
-
 (defun jinja-render-to-file (grain-id &optional pillar-files)
   "Renders the current Jinja file given a salt GRAIN-ID (and PILLAR-FILES)."
   (interactive "sGrain ID: ")
@@ -366,7 +365,7 @@
 	       (context-file (concat input-dir "../init.sls"))
                (error-buffer (get-buffer-create "*Jinja render errors*"))
                ;; Redirect stderr to stdout (2>&1)
-               (command (format "python3 /home/lilian/git/outils/render_template.py -g %s -o %s -c %s %s %s 2>&1"
+               (command (format "python3 /home/lilian/git/outils/render_template.py -g '%s' -o %s -c %s %s %s 2>&1"
                                 grain-id output-file context-file (shell-quote-argument input-file) pillar-files))
                (orig-line (line-number-at-pos))
                (orig-col (current-column)))  ;; Save current line and column
@@ -375,6 +374,9 @@
           (if (eq (call-process-shell-command command nil error-buffer) 0)
               (if (file-exists-p output-file)
                   (progn
+                    (let ((revert-without-query '("\\.rendered_.*")))
+                      (find-file output-file)
+                      (revert-buffer :ignore-auto :noconfirm))
                     (find-file output-file)
 		    (view-mode 1)
                     ;; Restore same line and column
@@ -471,7 +473,7 @@ Detects the root as srv-*/salt/ and handles init.sls and environment prefixes."
   "Applies to a docker salt-minion the active sls file as minion GRAIN-ID"
   (interactive "sGrain ID: ")
   (let* ((input-file (buffer-file-name (window-buffer (minibuffer-selected-window))))
-	 (salt-call-command (format "docker container exec salt-minion /usr/bin/salt-call --local -l warning --state-verbose=False --state-output=mixed state.apply %s saltenv=dev --id=%s --force-color" (file-salt-state-name input-file) grain-id))
+	 (salt-call-command (format "docker container exec salt-minion /usr/bin/salt-call --local -l warning --state-verbose=False --state-output=mixed state.apply %s saltenv=dev --id=%s --no-color" (file-salt-state-name input-file) grain-id))
          (buff (get-buffer-create "*Shell Output*")))
     (with-current-buffer buff
       (let ((inhibit-read-only t)) (erase-buffer))
