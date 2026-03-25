@@ -18,12 +18,13 @@
  '(markdown-command "/usr/bin/pandoc")
  '(org-export-backends '(ascii html icalendar latex man md odt))
  '(package-selected-packages
-   '(ligature company-lua lua-mode flycheck-grammalecte slack flycheck-languagetool undo-fu haproxy-mode which-key php-mode magit docker-compose-mode transpose-frame crontab-mode auto-dark atomic-chrome dockerfile-mode flycheck srcery-theme helm-tramp realgud helm-ls-git company gitlab-ci-mode jinja2-mode json-mode salt-mode helm wfnames markdown-mode async))
+   '(ligature lua-mode undo-fu haproxy-mode which-key php-mode magit docker-compose-mode transpose-frame crontab-mode auto-dark atomic-chrome dockerfile-mode flycheck srcery-theme realgud company jinja2-mode json-mode salt-mode markdown-mode))
  '(pydoc-command "python3 -m pydoc")
  '(pydoc-python-command "python3")
  '(realgud-window-split-orientation 'horizontal)
  '(realgud:pdb-command-name "python3 -m pdb")
- '(yaml-indent-offset 4 t))
+ '(salt-mode-indent-level 4)
+ '(yaml-indent-offset 4))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -130,6 +131,7 @@
 ;;(add-to-list 'default-frame-alist '(height . 50)) ; Window height in lines
 
 
+
 ;;;;;;;;;;;;;;;;;;;;
 ;; Calendar
 ;;;;;;;;;;;;;;;;;;;;
@@ -155,6 +157,13 @@
 (global-set-key (quote [M-down]) (quote scroll-up-line))
 (global-set-key (quote [M-up]) (quote scroll-down-line))
 
+;; https://stackoverflow.com/a/23691365
+;; Make C-c C-c behave like C-u C-c C-c in Python mode
+(require 'python)
+(define-key python-mode-map (kbd "C-c C-c")
+  (lambda () (interactive) (python-shell-send-buffer t)))
+
+
 ;;;;;;;;;;;;;;;;;;;;
 ;; Conf mode
 ;;;;;;;;;;;;;;;;;;;;
@@ -178,19 +187,18 @@
 ;;;;;;;;;;;;;;;;;;;;
 ;; Helm
 ;;;;;;;;;;;;;;;;;;;;
-;;(require 'helm-config)
-(helm-mode 1)
-;; Helm history length
-(setq helm-ff-history-max-length 10000)
-;; Raccourcis pour utiliser les équivalents helm
-(global-set-key (kbd "M-x") 'helm-M-x)
-;; (global-set-key (kbd "C-x C-f") 'helm-find-files)
-(global-set-key (kbd "M-y") 'helm-show-kill-ring)
-(global-set-key (kbd "C-x b") 'helm-mini)
-;; (global-set-key (kbd "C-x C-b") 'helm-buffers-list)
-(define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to run persistent action
-(global-set-key (kbd "C-c f") 'helm-recentf)
-(global-set-key (kbd "M-s o") 'helm-occur)
+(use-package helm
+  :ensure t
+  :init (helm-mode 1)
+  :bind (("M-x" . helm-M-x)
+         ("M-y" . helm-show-kill-ring)
+         ("C-x b" . helm-mini)
+         ("C-c f" . helm-recentf)
+	 ;; ("C-x C-f" . helm-find-files)
+         ("M-s o" . helm-occur))
+  :config
+  (define-key helm-map (kbd "<tab>") #'helm-execute-persistent-action))
+
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; Packages
@@ -285,56 +293,67 @@
 
 ;; emacs-slack
 ;; Gérer les tokens pour plus de sécu
-;; (use-package slack
-;;   :bind (("C-c S K" . slack-stop)
-;;          ("C-c S c" . slack-select-rooms)
-;;          ("C-c S u" . slack-select-unread-rooms)
-;;          ("C-c S U" . slack-user-select)
-;;          ("C-c S s" . slack-search-from-messages)
-;;          ("C-c S J" . slack-jump-to-browser)
-;;          ("C-c S j" . slack-jump-to-app)
-;;          ("C-c S e" . slack-insert-emoji)
-;;          ("C-c S E" . slack-message-edit)
-;;          ("C-c S r" . slack-message-add-reaction)
-;;          ("C-c S t" . slack-thread-show-or-create)
-;;          ("C-c S g" . slack-message-redisplay)
-;;          ("C-c S G" . slack-conversations-list-update-quick)
-;;          ("C-c S q" . slack-quote-and-reply)
-;;          ("C-c S Q" . slack-quote-and-reply-with-link)
-;;          (:map slack-mode-map
-;;                (("@" . slack-message-embed-mention)
-;;                 ("#" . slack-message-embed-channel)))
-;;          (:map slack-thread-message-buffer-mode-map
-;;                (("C-c '" . slack-message-write-another-buffer)
-;;                 ("@" . slack-message-embed-mention)
-;;                 ("#" . slack-message-embed-channel)))
-;;          (:map slack-message-buffer-mode-map
-;;                (("C-c '" . slack-message-write-another-buffer)))
-;;          (:map slack-message-compose-buffer-mode-map
-;;                (("C-c '" . slack-message-send-from-buffer)))
-;;          )
-;;   ;; :custom
-;;   ;; (slack-extra-subscribed-channels (mapcar 'intern (list "some-channel")))
-;;   :config
-;;   (slack-register-team
-;;      :name "Compilatio"
-;;      :token "xoxc-XXXXXXXXXXX"
-;;      :cookie "xoxd-XXXXXXXXX; d-s=0000000000"
-;;      :full-and-display-names t
-;;      :default t
-;;      :subscribed-channels nil ;; using slack-extra-subscribed-channels because I can change it dynamically
-;;      )
-;;   (setq slack-prefer-current-team t))
-;; (use-package alert
-;;   :commands (alert)
-;;   :init
-;;   (setq alert-default-style 'notifier))
-
+(defun enable-slack (token cookie)
+  "Enables Slack in Emacs given a token"
+  (interactive "sToken (xoxc-XXXXXXXXXXX): ")
+  (interactive "scookie (xoxd-XXXXXXXXX; d-s=0000000000): ")
+  (use-package slack
+    :bind (("C-c S K" . slack-stop)
+           ("C-c S c" . slack-select-rooms)
+           ("C-c S u" . slack-select-unread-rooms)
+           ("C-c S U" . slack-user-select)
+           ("C-c S s" . slack-search-from-messages)
+           ("C-c S J" . slack-jump-to-browser)
+           ("C-c S j" . slack-jump-to-app)
+           ("C-c S e" . slack-insert-emoji)
+           ("C-c S E" . slack-message-edit)
+           ("C-c S r" . slack-message-add-reaction)
+           ("C-c S t" . slack-thread-show-or-create)
+           ("C-c S g" . slack-message-redisplay)
+           ("C-c S G" . slack-conversations-list-update-quick)
+           ("C-c S q" . slack-quote-and-reply)
+           ("C-c S Q" . slack-quote-and-reply-with-link)
+           (:map slack-mode-map
+                 (("@" . slack-message-embed-mention)
+                  ("#" . slack-message-embed-channel)))
+           (:map slack-thread-message-buffer-mode-map
+                 (("C-c '" . slack-message-write-another-buffer)
+                  ("@" . slack-message-embed-mention)
+                  ("#" . slack-message-embed-channel)))
+           (:map slack-message-buffer-mode-map
+                 (("C-c '" . slack-message-write-another-buffer)))
+           (:map slack-message-compose-buffer-mode-map
+                 (("C-c '" . slack-message-send-from-buffer))))
+    ;; :custom
+    ;; (slack-extra-subscribed-channels (mapcar 'intern (list "some-channel")))
+    :config
+    (slack-register-team
+     :name "Compilatio"
+     :token "xoxc-XXXXXXXXXXX"
+     :cookie "xoxd-XXXXXXXXX; d-s=0000000000"
+     :full-and-display-names t
+     :default t
+     :subscribed-channels nil ;; using slack-extra-subscribed-channels because I can change it dynamically
+     )
+    (setq slack-prefer-current-team t))
+  (use-package alert
+    :commands (alert)
+    :init
+    (setq alert-default-style 'notifier)))
 
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; Custom functions
 ;;;;;;;;;;;;;;;;;;;;
+
+; Source - https://stackoverflow.com/a/23382008
+(require 'ansi-color)
+(defun display-ansi-colors ()
+  (interactive)
+  (ansi-color-apply-on-region (point-min) (point-max)))
+
+
+
 (defun jinja-render-to-file (grain-id &optional pillar-files)
   "Renders the current Jinja file given a salt GRAIN-ID (and PILLAR-FILES)."
   (interactive "sGrain ID: ")
@@ -345,14 +364,14 @@
                (output-filename (concat ".rendered_" input-filename))
                (output-file (expand-file-name output-filename input-dir))
 	       (context-file (concat input-dir "../init.sls"))
-               (error-buffer (get-buffer-create "*jinja-render-error*"))
+               (error-buffer (get-buffer-create "*Jinja render errors*"))
                ;; Redirect stderr to stdout (2>&1)
                (command (format "python3 /home/lilian/git/outils/render_template.py -g %s -o %s -c %s %s %s 2>&1"
                                 grain-id output-file context-file (shell-quote-argument input-file) pillar-files))
                (orig-line (line-number-at-pos))
                (orig-col (current-column)))  ;; Save current line and column
           (with-current-buffer error-buffer
-            (erase-buffer)) ;; Clear previous content
+             (let ((inhibit-read-only t)) (erase-buffer))) ;; Clear previous content
           (if (eq (call-process-shell-command command nil error-buffer) 0)
               (if (file-exists-p output-file)
                   (progn
@@ -394,7 +413,7 @@
  (kbd "C-c r")
  (lambda (grain-id)
    (interactive "sGrain ID: ")
-   (jinja-render-to-file grain-id "/home/lilian/saltmaster/srv-yuyu/pillar/dev/ojs_dev.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/ssl_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/ssh_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/prod/shibboleth_prod.sls /home/lilian/saltmaster/srv-yuyu/pillar/trans/tolgee_trans.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/tolgee_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/monitoring_all.sls")))
+   (jinja-render-to-file grain-id "/home/lilian/saltmaster/srv-yuyu/pillar/dev/ojs_dev.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/ssl_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/ssh_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/prod/shibboleth_prod.sls /home/lilian/saltmaster/srv-yuyu/pillar/trans/tolgee_trans.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/tolgee_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/monitoring_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/mongotrans_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/trans/saltmaster_trans.sls")))
 
 (global-set-key
  (kbd "C-c d")
@@ -410,8 +429,71 @@
      (call-process-shell-command commande))))
 
 
+(defun file-salt-state-name (file)
+  "Return the SaltStack state name for a given FILE path.
+Detects the root as srv-*/salt/ and handles init.sls and environment prefixes."
+  (let* ((rel (when (string-match "srv-[^/]+/salt/\\(.*\\)" file)
+                (match-string 1 file))))
+    (unless rel
+      (error "Not inside a srv-*/salt/ directory"))
+    ;; Remove env prefix (prod/, dev/, etc.)
+    (setq rel (replace-regexp-in-string "^[^/]+/" "" rel))
+    ;; Remove .sls extension
+    (setq rel (string-remove-suffix ".sls" rel))
+    ;; Handle init.sls specially
+    (setq rel (if (string-suffix-p "/init" rel)
+                  (string-remove-suffix "/init" rel)
+                rel))
+    ;; Convert / to .
+    (replace-regexp-in-string "/" "." rel)))
+
+(defun buffer-salt-state-name ()
+  "Return the SaltStack state name for the current buffer."
+  (interactive)
+  (let ((state (file-salt-state-name (buffer-file-name))))
+    (when (called-interactively-p 'interactive)
+      (message "%s" state))
+    state))
+
+(defun sh-dcall-apply (grain-id)
+  "Applies to a docker salt-minion the active sls file as minion GRAIN-ID"
+  (interactive "sGrain ID: ")
+  (let* ((input-file (buffer-file-name (window-buffer (minibuffer-selected-window))))
+	 (salt-call-command (format "/home/lilian/git/outils/shell_functions.sh dcall %s --id=%s --no-color" input-file grain-id))
+         (buff (get-buffer-create "*Shell Output*")))
+    (with-current-buffer buff
+      (let ((inhibit-read-only t)) (erase-buffer))
+      (special-mode))
+    (start-process-shell-command "docker salt-call" buff salt-call-command)
+    (display-buffer buff)))
+
+(defun dcall-apply (grain-id)
+  "Applies to a docker salt-minion the active sls file as minion GRAIN-ID"
+  (interactive "sGrain ID: ")
+  (let* ((input-file (buffer-file-name (window-buffer (minibuffer-selected-window))))
+	 (salt-call-command (format "docker container exec salt-minion /usr/bin/salt-call --local -l warning --state-verbose=False --state-output=mixed state.apply %s saltenv=dev --id=%s --force-color" (file-salt-state-name input-file) grain-id))
+         (buff (get-buffer-create "*Shell Output*")))
+    (with-current-buffer buff
+      (let ((inhibit-read-only t)) (erase-buffer))
+      (special-mode))
+    (start-process-shell-command "docker salt-call" buff salt-call-command)
+    (display-buffer buff)))
+
+
+(global-set-key
+ (kbd "C-c C")
+ (lambda (grain-id)
+   (interactive "sGrain ID: ")
+   (dcall-apply grain-id)))
+
+
 ;; To edit inputs in the browser from emacs
-;; (load "/home/lilian/.emacs.d/inbrowser.el")
+(defun in-brower-editing ()
+  "Enables the Atomic Chrome package"
+  (interactive)
+  (load "/home/lilian/.emacs.d/inbrowser.el")
+  (message "Loaded Atomic Chrome config"))
+
 
 ;; Local Variables:
 ;; flycheck-disabled-checkers: (emacs-lisp-checkdoc)
