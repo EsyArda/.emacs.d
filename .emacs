@@ -183,6 +183,7 @@
 (add-to-list 'auto-mode-alist '("\\.prf\\'" . conf-mode))
 (add-to-list 'auto-mode-alist '("\\.cron\\'" . crontab-mode))
 (add-to-list 'auto-mode-alist '("\\.jsonl\\'" . jsonc-mode))
+(add-to-list 'auto-mode-alist '("\\.log\\'" . log-view-mode))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; Helm
