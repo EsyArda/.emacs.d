@@ -1,4 +1,10 @@
 ;;;;;;;;;;;;;;;;;;;;
+;; Packages
+;;;;;;;;;;;;;;;;;;;;
+(require 'package)
+(package-initialize)
+
+;;;;;;;;;;;;;;;;;;;;
 ;; Theme
 ;;;;;;;;;;;;;;;;;;;;
 (load-theme 'modus-vivendi t)

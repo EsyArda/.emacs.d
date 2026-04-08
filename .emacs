@@ -18,7 +18,7 @@
  '(markdown-command "/usr/bin/pandoc")
  '(org-export-backends '(ascii html icalendar latex man md odt))
  '(package-selected-packages
-   '(ligature lua-mode undo-fu haproxy-mode which-key php-mode magit docker-compose-mode transpose-frame crontab-mode auto-dark atomic-chrome dockerfile-mode flycheck srcery-theme realgud company jinja2-mode json-mode salt-mode markdown-mode))
+   '(magit which-key undo-fu transpose-frame srcery-theme salt-mode realgud php-mode markdown-mode lua-mode ligature json-mode jinja2-mode flycheck dockerfile-mode docker-compose-mode crontab-mode company auto-dark atomic-chrome))
  '(pydoc-command "python3 -m pydoc")
  '(pydoc-python-command "python3")
  '(realgud-window-split-orientation 'horizontal)
@@ -416,7 +416,7 @@
  (kbd "C-c r")
  (lambda (grain-id)
    (interactive "sGrain ID: ")
-   (jinja-render-to-file grain-id "/home/lilian/saltmaster/srv-yuyu/pillar/dev/ojs_dev.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/ssl_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/ssh_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/prod/shibboleth_prod.sls /home/lilian/saltmaster/srv-yuyu/pillar/trans/tolgee_trans.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/tolgee_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/monitoring_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/mongotrans_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/trans/saltmaster_trans.sls")))
+   (jinja-render-to-file grain-id "/home/lilian/saltmaster/srv-yuyu/pillar/dev/ojs_dev.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/ssl_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/ssh_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/prod/shibboleth_prod.sls /home/lilian/saltmaster/srv-yuyu/pillar/trans/tolgee_trans.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/tolgee_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/monitoring_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/mongotrans_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/trans/saltmaster_trans.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/salt_all.sls")))
 
 (global-set-key
  (kbd "C-c d")
