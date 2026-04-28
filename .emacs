@@ -32,9 +32,6 @@
  ;; If there is more than one, they won't work right.
  )
 
-;; Couleurs ansi
-;; C-x h M-: (ansi-color-apply-on-region (point-min) (point-max)) RET
-
 ;;;;;;;;;;;;;;;;;;;;
 ;; Theme
 ;;;;;;;;;;;;;;;;;;;;
@@ -185,9 +182,12 @@
 (add-to-list 'auto-mode-alist '("\\.jsonl\\'" . jsonc-mode))
 (add-to-list 'auto-mode-alist '("\\.log\\'" . log-view-mode))
 
+
 ;;;;;;;;;;;;;;;;;;;;
+;; Packages
+;;;;;;;;;;;;;;;;;;;;
+
 ;; Helm
-;;;;;;;;;;;;;;;;;;;;
 (use-package helm
   :ensure t
   :init (helm-mode 1)
@@ -195,15 +195,11 @@
          ("M-y" . helm-show-kill-ring)
          ("C-x b" . helm-mini)
          ("C-c f" . helm-recentf)
-	 ;; ("C-x C-f" . helm-find-files)
+	 ("C-x f" . helm-find-files)
          ("M-s o" . helm-occur))
   :config
   (define-key helm-map (kbd "<tab>") #'helm-execute-persistent-action))
 
-
-;;;;;;;;;;;;;;;;;;;;
-;; Packages
-;;;;;;;;;;;;;;;;;;;;
 
 ;; Which key
 (which-key-mode)
@@ -280,12 +276,6 @@
 ;; (setq salt-mode-indent-level 4)
 (setq salt-mode-python-program "python3")
 
-
-;; Function to turn on ANSI colors
-;; (require 'ansi-color)
-;; (defun display-ansi-colors ()
-;;   (interactive)
-;;   (ansi-color-apply-on-region (point-min) (point-max)))
 
 ;; Undo fu
 (global-unset-key (kbd "C-z"))
