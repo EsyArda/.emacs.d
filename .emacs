@@ -21,7 +21,7 @@
    '(magit which-key undo-fu transpose-frame srcery-theme salt-mode realgud php-mode markdown-mode lua-mode ligature json-mode jinja2-mode flycheck dockerfile-mode docker-compose-mode crontab-mode company auto-dark atomic-chrome))
  '(pydoc-command "python3 -m pydoc")
  '(pydoc-python-command "python3")
- '(realgud-window-split-orientation 'horizontal)
+ '(realgud-window-split-orientation 'vertical)
  '(realgud:pdb-command-name "python3 -m pdb")
  '(salt-mode-indent-level 4)
  '(yaml-indent-offset 4))
@@ -156,9 +156,11 @@
 
 ;; https://stackoverflow.com/a/23691365
 ;; Make C-c C-c behave like C-u C-c C-c in Python mode
-(require 'python)
+;; (require 'python)
 (define-key python-mode-map (kbd "C-c C-c")
-  (lambda () (interactive) (python-shell-send-buffer t)))
+	    (lambda () (interactive) (python-shell-send-buffer t)))
+(define-key python-mode-map (kbd "C-c g") #'realgud:pdb)
+
 
 
 ;;;;;;;;;;;;;;;;;;;;
@@ -181,25 +183,36 @@
 (add-to-list 'auto-mode-alist '("\\.cron\\'" . crontab-mode))
 (add-to-list 'auto-mode-alist '("\\.jsonl\\'" . jsonc-mode))
 (add-to-list 'auto-mode-alist '("\\.log\\'" . log-view-mode))
-
+(add-to-list 'auto-mode-alist '("\\.git/COMMIT_EDITMSG\\'" . diff-mode))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; Packages
 ;;;;;;;;;;;;;;;;;;;;
 
 ;; Helm
-(use-package helm
-  :ensure t
-  :init (helm-mode 1)
-  :bind (("M-x" . helm-M-x)
-         ("M-y" . helm-show-kill-ring)
-         ("C-x b" . helm-mini)
-         ("C-c f" . helm-recentf)
-	 ("C-x f" . helm-find-files)
-         ("M-s o" . helm-occur))
-  :config
-  (define-key helm-map (kbd "<tab>") #'helm-execute-persistent-action))
-
+;; (use-package helm
+;;   :ensure t
+;;   :init (helm-mode 1)
+;;   :bind (("M-x" . helm-M-x)
+;;          ("M-y" . helm-show-kill-ring)
+;;          ("C-x b" . helm-mini)
+;;          ("C-c f" . helm-recentf)
+;; 	 ("C-x f" . helm-find-files)
+;;          ("M-s o" . helm-occur))
+;;   :config
+;;   (define-key helm-map (kbd "<tab>") #'helm-execute-persistent-action))
+;;(require 'helm-config)
+(helm-mode 1)
+;; Helm history length
+(setq helm-ff-history-max-length 10000)
+;; Raccourcis pour utiliser les équivalents helm
+(global-set-key (kbd "M-x") 'helm-M-x)
+(global-set-key (kbd "C-x f") 'helm-find-files)
+(global-set-key (kbd "M-y") 'helm-show-kill-ring)
+(global-set-key (kbd "C-x b") 'helm-mini)
+(global-set-key (kbd "C-c f") 'helm-recentf)
+(global-set-key (kbd "M-s o") 'helm-occur)
+(define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to run persistent action
 
 ;; Which key
 (which-key-mode)
@@ -210,31 +223,32 @@
 (setq company-minimum-prefix-length 2)
 (setq company-idle-delay 0.1)
 ;; https://emacs.stackexchange.com/questions/55028/how-can-i-disable-company-mode-in-a-shell-when-it-is-remote
-(defun my-shell-mode-setup-function () 
-  (when (and (fboundp 'company-mode)
-             (file-remote-p default-directory))
-    (company-mode -1)))
-(add-hook 'shell-mode-hook 'my-shell-mode-setup-function)
-(add-hook 'eshell-mode-hook 'my-shell-mode-setup-function)
+;; (defun my-shell-mode-setup-function () 
+;;   (when (and (fboundp 'company-mode)
+;;              (file-remote-p default-directory))
+;;     (company-mode -1)))
+;; (add-hook 'shell-mode-hook 'my-shell-mode-setup-function)
+;; (add-hook 'eshell-mode-hook 'my-shell-mode-setup-function)
 
-;; LSP Lua
-(with-eval-after-load 'eglot
-  (add-to-list 'eglot-server-programs
-               '(lua-mode . ("/home/perso/.local/opt/lua-language-server/bin/lua-language-server"))))
-(add-hook 'lua-mode-hook #'eglot-ensure)
+;; ;; LSP Lua
+;; (with-eval-after-load 'eglot
+;;   (add-to-list 'eglot-server-programs
+;;                '(lua-mode . ("/home/perso/.local/opt/lua-language-server/bin/lua-language-server"))))
+;; (add-hook 'lua-mode-hook #'eglot-ensure)
 
 ;; LSP Python
-(with-eval-after-load 'eglot
-  (message (file-name-directory buffer-file-name))
-  (setq eglot-server-programs
-        '((python-mode . ("pylsp")))))
-(add-hook 'python-mode-hook #'eglot-ensure)
+;; (with-eval-after-load 'eglot
+;;   (message (file-name-directory buffer-file-name))
+;;   (add-to-list  'eglot-server-programs
+;; 		'(python-mode . ("pylsp")))
+;;   (define-key eglot-mode-map (kbd "C-c r") #'eglot-rename))
+;; (add-hook 'python-mode-hook #'eglot-ensure)
 ;; (with-eval-after-load 'eglot
 ;;   (message (file-name-directory buffer-file-name))
 ;;   (setq eglot-server-programs
-;;         '((python-mode . ("/home/lilian/saltmaster/srv-yuyu/salt/venv-salt/bin/pylsp")))))
-
-
+;;         '((python-mode . ("pylsp"))))
+;;   (define-key eglot-mode-map (kbd "C-c r") #'eglot-rename))
+;; (add-hook 'python-mode-hook #'eglot-ensure)
 
 ;; Flycheck
 ;; https://www.flycheck.org/en/latest/
@@ -403,10 +417,10 @@
 
 ;; Render Jinja template keybind
 (global-set-key
- (kbd "C-c r")
+ (kbd "C-c j")
  (lambda (grain-id)
    (interactive "sGrain ID: ")
-   (jinja-render-to-file grain-id "/home/lilian/saltmaster/srv-yuyu/pillar/dev/ojs_dev.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/ssl_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/ssh_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/prod/shibboleth_prod.sls /home/lilian/saltmaster/srv-yuyu/pillar/trans/tolgee_trans.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/tolgee_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/monitoring_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/mongotrans_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/trans/saltmaster_trans.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/salt_all.sls")))
+   (jinja-render-to-file grain-id "/home/lilian/saltmaster/srv-yuyu/pillar/dev/ojs_dev.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/ssl_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/ssh_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/prod/shibboleth_prod.sls /home/lilian/saltmaster/srv-yuyu/pillar/trans/tolgee_trans.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/tolgee_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/mongotrans_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/trans/saltmaster_trans.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/salt_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/trans/monitoring_trans.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/monitoring_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/zendesk_all.sls /home/lilian/saltmaster/srv-yuyu/pillar/all/common_all.sls")))
 
 (global-set-key
  (kbd "C-c d")
@@ -464,7 +478,7 @@ Detects the root as srv-*/salt/ and handles init.sls and environment prefixes."
   "Applies to a docker salt-minion the active sls file as minion GRAIN-ID"
   (interactive "sGrain ID: ")
   (let* ((input-file (buffer-file-name (window-buffer (minibuffer-selected-window))))
-	 (salt-call-command (format "docker container exec salt-minion /usr/bin/salt-call --local -l warning --state-verbose=False --state-output=mixed state.apply %s saltenv=dev --id=%s --no-color" (file-salt-state-name input-file) grain-id))
+	 (salt-call-command (format "docker container exec salt-minion /usr/bin/salt-call --local -l warning --state-verbose=False --state-output=changes state.apply %s saltenv=dev --id=%s --no-color" (file-salt-state-name input-file) grain-id))
          (buff (get-buffer-create "*Shell Output*")))
     (with-current-buffer buff
       (let ((inhibit-read-only t)) (erase-buffer))
@@ -481,7 +495,7 @@ Detects the root as srv-*/salt/ and handles init.sls and environment prefixes."
 
 
 ;; To edit inputs in the browser from emacs
-(defun in-brower-editing ()
+(defun in-browser-editing ()
   "Enables the Atomic Chrome package"
   (interactive)
   (load "/home/lilian/.emacs.d/inbrowser.el")
