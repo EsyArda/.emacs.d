@@ -6,40 +6,13 @@
 ;;; Code:
 
 ;; Melpa
-;; https://melpa.org/partials/getting-started.html
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-;; Comment/uncomment this line to enable MELPA Stable if desired.  See `package-archive-priorities`
-;; and `package-pinned-packages`. Most users will not need or want to do this.
-;;(add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
-(package-initialize)
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; Theme
 ;;;;;;;;;;;;;;;;;;;;
 (load-theme 'modus-vivendi)
-
-
-;; Font
-(use-package ligature
-  :config
-  ;; (set-face-attribute 'default nil :height 110) ;; font size
-  (set-frame-font "Fira Code")
-  ;; Enable the www ligature in every possible major mode
-  (ligature-set-ligatures 't '("www"))
-  ;; Enable ligatures in programming modes
-  (ligature-set-ligatures 'prog-mode '("www" "**" "***" "**/" "*>" "*/" "\\\\" "\\\\\\" "{-" "::"
-                                       ":::" ":=" "!!" "!=" "!==" "-}" "----" "-->" "->" "->>"
-                                       "-<" "-<<" "-~" "#{" "#[" "##" "###" "####" "#(" "#?" "#_"
-                                       "#_(" ".-" ".=" ".." "..<" "..." "?=" "??" ";;" "/*" "/**"
-                                       "/=" "/==" "/>" "//" "///" "&&" "||" "||=" "|=" "|>" "^=" "$>"
-                                       "++" "+++" "+>" "=:=" "==" "===" "==>" "=>" "=>>" "<="
-                                       "=<<" "=/=" ">-" ">=" ">=>" ">>" ">>-" ">>=" ">>>" "<*"
-                                       "<*>" "<|" "<|>" "<$" "<$>" "<!--" "<-" "<--" "<->" "<+"
-                                       "<+>" "<=" "<==" "<=>" "<=<" "<>" "<<" "<<-" "<<=" "<<<"
-                                       "<~" "<~~" "</" "</>" "~@" "~-" "~>" "~~" "~~>" "%%"))
-  (global-ligature-mode 't))
-
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; Global configuration
@@ -79,8 +52,6 @@
   (repeat-mode 1)
   (tool-bar-mode -1) ; Désactive la avec les icônes d’outils
   (global-hl-line-mode t) ; Surligne la ligne active
-  ;; Which key
-  (which-key-mode)
   ;; Minibuffer completion
   (fido-vertical-mode)
   (winner-mode)
@@ -94,23 +65,10 @@
             '(buffer-file-name "%f" (dired-directory dired-directory "%b"))))
 
 
-;;;;;;;;;;;;;;;;;;;;
-;; Keyboard shortcuts
-;;;;;;;;;;;;;;;;;;;;
-
-;; (global-set-key (quote [M-down]) (quote scroll-up-line))
-;; (global-set-key (quote [M-up]) (quote scroll-down-line))
-
 ;; https://www.emacswiki.org/emacs/WindMove
 ;; Move point from window to window using Shift and the arrow keys
 (when (fboundp 'windmove-default-keybindings)
   (windmove-default-keybindings))
-
-;; Buffer manipulation shortcuts for azerty afnor keyboard
-;; (global-set-key (kbd "C-x à") 'delete-other-windows)
-;; (global-set-key (kbd "C-x é") 'split-window-below)
-;; (global-set-key (kbd "C-x è") 'split-window-right)
-;; (global-set-key (kbd "C-x »") 'delete-window)
 
 
 ;; https://stackoverflow.com/a/23691365
@@ -120,10 +78,6 @@
 ;; 	    (lambda () (interactive) (python-shell-send-buffer t)))
 
 
-
-;;;;;;;;;;;;;;;;;;;;
-;; Modes
-;;;;;;;;;;;;;;;;;;;;
 ;; Syntax highlighting
 (add-to-list 'auto-mode-alist '("\\.\\(ovpn\\|service\\|timer\\|socket\\|path\\)\\'" . conf-unix-mode))
 (add-to-list 'auto-mode-alist '("\\.\\(prf\\|logrotate\\)\\'" . conf-mode))
@@ -134,12 +88,18 @@
 (add-to-list 'auto-mode-alist '("\\.jinja\\'" . jinja2-mode))
 (add-to-list 'auto-mode-alist '("\\.env\\'" . shell-script-mode))
 
-;;;;;;;;;;;;;;;;;;;;
-;; Packages
-;;;;;;;;;;;;;;;;;;;;
+
+;; Which key
+(use-package which-key
+  :defer t
+  :ensure nil
+  :hook (after-init-hook . which-key-mode))
+
 
 ;; Org mode
 (use-package org
+  :ensure nil
+  :defer t
   :config
   (setq org-startup-truncated nil ; Réactive le retour à la ligne en org-mode
 	org-export-backends '(ascii html icalendar latex man md odt)
@@ -150,6 +110,7 @@
    '((python . t)
      (shell . t)
      (calc . t))))
+
 
 ;; Auto completion
 ;; (use-package company
@@ -164,18 +125,8 @@
   (global-completion-preview-mode t)
   (setq completion-preview-minimum-symbol-length 2))
 
+
 ;; LSP
-;; (use-package eglot
-;;   :config
-;;   (with-eval-after-load 'eglot
-;;     ;; Lua
-;;     (add-to-list 'eglot-server-programs
-;;                  '(lua-mode . ("/home/perso/.local/opt/lua-language-server/bin/lua-language-server")))
-;;     ;; Python
-;;     (setq eglot-server-programs
-;;           (append eglot-server-programs '((python-mode . ("pylsp")))) ))
-;;   (add-hook 'lua-mode-hook #'eglot-ensure)
-;;   (add-hook 'python-mode-hook #'eglot-ensure))
 (use-package eglot
   :hook ((python-ts-mode . eglot-ensure)
          (python-mode    . eglot-ensure)
@@ -183,40 +134,83 @@
          (lua-ts-mode    . eglot-ensure))
   :config
   (add-to-list 'eglot-server-programs
-               '(lua-mode
-                 . ("/home/perso/.local/opt/lua-language-server/bin/lua-language-server"))))
+               `((lua-mode lua-ts-mode)
+                 . (,(expand-file-name
+                      "~/.local/opt/lua-language-server/bin/lua-language-server")))))
+
+
+;; Spelling checker
+(use-package flyspell
+  :ensure nil
+  :defer t
+  :config
+  :hook
+  ((text-mode-hook . flyspell-mode)
+   (prog-mode-hook . flyspell-prog-mode))
+  )
 
 
 ;; Flycheck
 ;; https://www.flycheck.org/en/latest/
 (use-package flycheck
-  :config
-  (add-hook 'after-init-hook #'global-flycheck-mode))
+  :defer t
+  :hook (prog-mode-hook . flycheck-mode))
 
-;; Undo fu
-(use-package undo-fu
-  :config
-  (global-unset-key (kbd "C-z"))
-  (global-set-key (kbd "C-z")   'undo-fu-only-undo)
-  (global-set-key (kbd "C-S-z") 'undo-fu-only-redo))
 
+;; Font
+(use-package ligature
+  :hook (after-init . global-ligature-mode)
+  :config
+  ;; (set-face-attribute 'default nil :height 110) ;; font size
+  (set-frame-font "Fira Code")
+  ;; Enable the www ligature in every possible major mode
+  (ligature-set-ligatures 't '("www"))
+  ;; Enable ligatures in programming modes
+  (ligature-set-ligatures 'prog-mode '("www" "**" "***" "**/" "*>" "*/" "\\\\" "\\\\\\" "{-" "::"
+                                       ":::" ":=" "!!" "!=" "!==" "-}" "----" "-->" "->" "->>"
+                                       "-<" "-<<" "-~" "#{" "#[" "##" "###" "####" "#(" "#?" "#_"
+                                       "#_(" ".-" ".=" ".." "..<" "..." "?=" "??" ";;" "/*" "/**"
+                                       "/=" "/==" "/>" "//" "///" "&&" "||" "||=" "|=" "|>" "^=" "$>"
+                                       "++" "+++" "+>" "=:=" "==" "===" "==>" "=>" "=>>" "<="
+                                       "=<<" "=/=" ">-" ">=" ">=>" ">>" ">>-" ">>=" ">>>" "<*"
+                                       "<*>" "<|" "<|>" "<$" "<$>" "<!--" "<-" "<--" "<->" "<+"
+                                       "<+>" "<=" "<==" "<=>" "<=<" "<>" "<<" "<<-" "<<=" "<<<"
+                                       "<~" "<~~" "</" "</>" "~@" "~-" "~>" "~~" "~~>" "%%")))
+
+
+;; Git
 (use-package magit
-  :ensure t)
+  :ensure t
+  :defer t)
 
+
+;; Debuggers
 (use-package realgud
   :after python
-  :config
-  (setq realgud:pdb-command-name "python3 -m pdb")
-  (define-key python-mode-map (kbd "C-c g") #'realgud:pdb))
+  :defer t
+  :commands realgud:pdb
+  :bind (:map python-base-mode-map ("C-c g" . realgud:pdb))
+  :init
+  (setq realgud:pdb-command-name "python3 -m pdb"))
 
 ;; (use-package dockerfile-mode
 ;;   :ensure
 ;;   :config
 ;;   (setq dockerfile-build-progress "plain"))
 
-;;;;;;;;;;;;;;;;;;;;
-;; Custom functions
-;;;;;;;;;;;;;;;;;;;;
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+
 
 (provide '.emacs)
 ;;; .emacs ends here
